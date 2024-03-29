@@ -5,14 +5,14 @@ import {NavigationContainer} from '@react-navigation/native';
 import {useAuth} from '../context/auth-context';
 
 export default function AppNav() {
-  const {userId, getUserData} = useAuth();
+  const {isAuthenticated, getUserCollection} = useAuth();
 
   useEffect(() => {
-    getUserData();
+    getUserCollection();
   }, []);
   return (
     <NavigationContainer>
-      {userId ? <AppStack /> : <AuthStack />}
+      {isAuthenticated ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }

@@ -25,6 +25,8 @@ import {
 } from 'react-native-image-picker';
 import ProfileHeader from './_components/profile-header';
 import storage from '@react-native-firebase/storage';
+import {AtIcon} from '../../../../assets/icons';
+import {useAuth} from '../../../context/auth-context';
 
 export type completeProfileProps = {
   first_name: string;
@@ -33,20 +35,24 @@ export type completeProfileProps = {
   cover: string | null;
   bio: string;
   location: string;
+  username: string;
 };
 
 export function CompleteProfileScreen() {
   const navigation = useNavigation<NavigationProp<AppStackRoutes>>();
   const {currentColor} = useTheme();
+  const {authenticateUser} = useAuth();
 
   const form = useForm<completeProfileProps>({
     defaultValues: {
       first_name: '',
       last_name: '',
-      avatar: null,
-      cover: null,
+      avatar:
+        'https://t4.ftcdn.net/jpg/05/42/36/11/360_F_542361185_VFRJWpR2FH5OiAEVveWO7oZnfSccZfD3.jpg',
+      cover: 'https://savethefrogs.com/wp-content/uploads/placeholder-1-2.png',
       bio: '',
       location: '',
+      username: '',
     },
   });
 
@@ -60,13 +66,10 @@ export function CompleteProfileScreen() {
     };
 
     launchImageLibrary(options, response => {
-      console.log('response', response);
       if (response.didCancel) {
         console.log('User cancelled image picker');
-      } else if (response?.error) {
-        console.log('Image picker error: ', response?.error);
       } else {
-        let imageUri = response.uri || response.assets?.[0]?.uri;
+        let imageUri = response.assets?.[0]?.uri;
         form.setValue(name, imageUri);
       }
     });
@@ -109,6 +112,7 @@ export function CompleteProfileScreen() {
         first_name: data?.first_name,
         last_name: data?.last_name,
         bio: data?.bio,
+        username: data?.username,
         location: data?.location,
         avatar: avatarImageUrl,
         cover: coverImageUrl,
@@ -127,7 +131,7 @@ export function CompleteProfileScreen() {
         backgroundColor: currentColor.violet,
       });
       setLoading(false);
-      navigation.navigate('HomeScreen');
+      authenticateUser(userID);
     } catch (error: any) {
       setLoading(false);
       Snackbar.show({
@@ -170,6 +174,15 @@ export function CompleteProfileScreen() {
             marginTop: hp(3),
             padding: wp(4),
           }}>
+          <InputComponent
+            control={form.control}
+            label="Username"
+            name="username"
+            placeholder="username"
+            type="default"
+            isPassword={false}
+            Icon1={AtIcon}
+          />
           <InputComponent
             control={form.control}
             label="First Name"

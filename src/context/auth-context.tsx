@@ -1,73 +1,137 @@
-import React, {createContext, useContext, useState} from 'react';
+import {createContext, ReactNode, useContext, useState} from 'react';
+import Storage from 'react-native-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useUser} from '../features/userSlice';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import {User} from '../types/user';
 
-type UserData = {
-  userId: string;
-  // Other user data properties
-};
+export interface AuthContextProps {
+  authenticateUser: (token: string) => void;
+  isAuthenticated: boolean;
+  checking: boolean;
+  getUserCollection: () => void;
+  logout: () => void;
+}
 
-type AuthContextType = {
-  token: string | null;
-  userId: string | null;
-  saveUserIdAndToken: (userId: string, token: string) => Promise<void>;
-  getUserData: () => Promise<UserData | null>;
-};
-
-const AuthContext = createContext<AuthContextType>({
-  token: null,
-  userId: null,
-  saveUserIdAndToken: async () => {},
-  getUserData: async () => null,
+const storage = new Storage({
+  size: 1000,
+  storageBackend: AsyncStorage,
+  defaultExpires: 1000 * 3600 * 24,
+  enableCache: true,
+  sync: {},
 });
 
-export const useAuth = (): AuthContextType => useContext(AuthContext);
+export const AuthContext = createContext<AuthContextProps | null>(null);
 
-type AuthProviderProps = {
-  children: React.ReactNode;
-};
+export const AuthProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}): JSX.Element => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [userID, setUserID] = useState<string | null>(null);
+  const [checking, setChecking] = useState<boolean>(false);
+  const {setData} = useUser();
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const authenticateUser = (token: string) => {
+    storage
+      .save({
+        key: 'threads-user-id',
+        data: {
+          token: token,
+        },
+        expires: 1000 * 3600,
+      })
+      .then(() => {
+        setIsAuthenticated(true);
+      })
+      .catch(() => {
+        setIsAuthenticated(false);
+      });
+  };
 
-  const saveUserIdAndToken = async (
-    userId: string,
-    token: string,
-  ): Promise<void> => {
-    try {
-      await AsyncStorage.setItem('userToken', token);
-      setToken(token);
-      await AsyncStorage.setItem('threads-user-id', userId);
-      setUserId(userId);
-    } catch (error) {
-      console.error('Error saving user ID and token:', error);
+  const isLoggedIn = async () => {
+    const {token} = await storage.load({
+      key: 'threads-user-id',
+      autoSync: true,
+    });
+    if (token) {
+      setUserID(token);
+      await getUserCollection();
+      return true;
+    } else {
+      setIsAuthenticated(false);
+      return false;
     }
   };
 
-  const getUserData = async (): Promise<UserData | null> => {
+  const getUserCollection = async () => {
     try {
-      const storedUserId = await AsyncStorage.getItem('threads-user-id');
-      if (!storedUserId) {
-        return null;
+      setChecking(true);
+
+      const isLoggedInUser = await isLoggedIn();
+
+      if (isLoggedInUser && userID !== null) {
+        const userSnapshot = await firestore()
+          .collection('users')
+          .where('id', '==', userID)
+          .get();
+
+        if (!userSnapshot.empty) {
+          const res = userSnapshot.docs[0].data();
+          const user = res as User;
+          console.log('User data:', user);
+
+          setData(user);
+        } else {
+          console.log('No user found with the given ID.');
+        }
       }
 
-      // Fetch user data using storedUserId from Firestore or any other data source
-      const userData: UserData = {
-        userId: storedUserId,
-        // Other user data properties
-      };
-      setUserId(storedUserId);
-      return userData;
+      setChecking(false);
     } catch (error) {
-      console.error('Error getting user data:', error);
-      return null;
+      setChecking(false);
+      console.error('Error while getting user collection:', error);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await storage
+        .remove({
+          key: 'threads-user-id',
+        })
+        .then(async () => {
+          await auth()
+            .signOut()
+            .then(() => {
+              setUserID(null);
+              setIsAuthenticated(false);
+            });
+        });
+    } catch (error: any) {
+      console.log('error while logout', error);
+      if (error?.code === 'auth/no-current-user') {
+        setUserID(null);
+        setIsAuthenticated(false);
+      }
     }
   };
 
   return (
     <AuthContext.Provider
-      value={{token, userId, saveUserIdAndToken, getUserData}}>
+      value={{
+        isAuthenticated,
+        authenticateUser,
+        getUserCollection,
+        logout,
+        checking,
+      }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = (): AuthContextProps =>
+  useContext(AuthContext) as AuthContextProps;

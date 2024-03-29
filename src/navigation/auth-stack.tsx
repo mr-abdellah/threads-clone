@@ -17,7 +17,7 @@ export default function AuthStack() {
   const {currentColor} = useTheme();
   const navigation = useNavigation<NavigationProp<AppStackRoutes>>();
   return (
-    <Stack.Navigator initialRouteName="CompleteProfileScreen">
+    <Stack.Navigator initialRouteName="onBoardingScreen">
       <Stack.Screen
         name="onBoardingScreen"
         component={OnboardingScreen}

@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {LockIcon, Logo, UserCheckIcon} from '../../../../assets/icons';
@@ -8,17 +8,42 @@ import {useTheme} from '../../../hooks';
 import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
 import InputComponent from '../_components/input-component';
 import {useForm} from 'react-hook-form';
+import auth from '@react-native-firebase/auth';
+import {useAuth} from '../../../context/auth-context';
+
+type loginProps = {
+  email: string;
+  password: string;
+};
 
 export function LoginScreen() {
   const navigation = useNavigation<NavigationProp<AuthStackRoutes>>();
   const {currentColor} = useTheme();
+  const {authenticateUser, getUserCollection} = useAuth();
 
-  const form = useForm<{email: string; password: string}>({
+  const form = useForm<loginProps>({
     defaultValues: {
       email: '',
       password: '',
     },
   });
+
+  const [loading, setLoading] = React.useState<boolean>(false);
+
+  const login = async (data: loginProps) => {
+    try {
+      setLoading(true);
+      await auth()
+        .signInWithEmailAndPassword(data.email, data.password)
+        .then(res => {
+          authenticateUser(res.user.uid);
+          getUserCollection();
+          setLoading(false);
+        });
+    } catch (error) {
+      console.log('error while login in', error);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -85,21 +110,27 @@ export function LoginScreen() {
         />
       </View>
       <TouchableOpacity
+        disabled={loading}
+        onPress={form.handleSubmit(login)}
         style={{
           width: '100%',
           backgroundColor: currentColor.secondary,
           borderRadius: wp(3),
           padding: wp(3),
         }}>
-        <Text
-          style={{
-            fontSize: wp(3.5),
-            color: currentColor.primary,
-            textAlign: 'center',
-            fontWeight: 'bold',
-          }}>
-          Login
-        </Text>
+        {loading ? (
+          <ActivityIndicator color={currentColor.primary} size="small" />
+        ) : (
+          <Text
+            style={{
+              fontSize: wp(3.5),
+              color: currentColor.primary,
+              textAlign: 'center',
+              fontWeight: 'bold',
+            }}>
+            Login
+          </Text>
+        )}
       </TouchableOpacity>
 
       <View
