@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {LockIcon, Logo, UserCheckIcon} from '../../../../assets/icons';
@@ -8,17 +8,136 @@ import {useTheme} from '../../../hooks';
 import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
 import InputComponent from '../_components/input-component';
 import {useForm} from 'react-hook-form';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import Snackbar from 'react-native-snackbar';
+import {FirebaseError} from '../../../types';
+import {yupResolver} from '@hookform/resolvers/yup';
+import registrationSchema from './_validation/register-schema';
+
+type registerProps = {
+  email: string;
+  password: string;
+  password_confirmation: string;
+};
 
 export function RegisterScreen() {
   const navigation = useNavigation<NavigationProp<AuthStackRoutes>>();
   const {currentColor} = useTheme();
 
-  const form = useForm<{email: string; password: string}>({
+  const form = useForm<registerProps>({
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'belkaid.abdulah@gmail.com',
+      password: '12345678',
+      password_confirmation: '12345678',
     },
+    resolver: yupResolver(registrationSchema),
   });
+
+  const [loading, setLoading] = React.useState<boolean>(false);
+
+  const register = async (data: registerProps) => {
+    try {
+      setLoading(true);
+      auth()
+        .createUserWithEmailAndPassword(data.email, data.password)
+        .then(res => {
+          firestore()
+            .collection('users')
+            .doc(res.user.uid)
+            .set({
+              email: data.email,
+              first_name: null,
+              last_name: null,
+              followers: 0,
+              following: 0,
+              id: res.user.uid,
+              avatar: null,
+              cover: null,
+              bio: null,
+              is_verified: false,
+              is_premium: false,
+              location: null,
+            })
+            .then(res => {
+              console.log('registered : ', res);
+              // setData({
+              //   token: res.user.uid,
+              //   user: {
+              //     email: data.email,
+              //     first_name: null,
+              //     last_name: null,
+              //     followers: [],
+              //     following: [],
+              //     username: null,
+              //   },
+              // });
+              setLoading(false);
+              Snackbar.show({
+                text: 'Account has been created successfully',
+                duration: Snackbar.LENGTH_INDEFINITE,
+                action: {
+                  text: 'UNDO',
+                  textColor: '#fff',
+                  onPress: () => {
+                    //
+                  },
+                },
+                backgroundColor: currentColor.violet,
+              });
+              // navigation.navigate('CompleteProfile', {
+              //   email: data.email,
+              // });
+            })
+            .catch((error: FirebaseError) => {
+              console.log('error creating in users table : ', error);
+              Snackbar.show({
+                text: error?.userInfo?.message,
+                duration: Snackbar.LENGTH_INDEFINITE,
+                action: {
+                  text: 'UNDO',
+                  textColor: '#fff',
+                  onPress: () => {
+                    //
+                  },
+                },
+                backgroundColor: 'red',
+              });
+              setLoading(false);
+            });
+        })
+        .catch((error: FirebaseError) => {
+          Snackbar.show({
+            text: error?.userInfo?.message,
+            duration: Snackbar.LENGTH_INDEFINITE,
+            action: {
+              text: 'UNDO',
+              textColor: '#fff',
+              onPress: () => {
+                //
+              },
+            },
+            backgroundColor: 'red',
+          });
+          setLoading(false);
+        });
+    } catch (error: any) {
+      setLoading(false);
+      console.log('error while creating user : ', error);
+      Snackbar.show({
+        text: error?.userInfo?.message,
+        duration: Snackbar.LENGTH_INDEFINITE,
+        action: {
+          text: 'UNDO',
+          textColor: '#fff',
+          onPress: () => {
+            //
+          },
+        },
+        backgroundColor: 'red',
+      });
+    }
+  };
 
   return (
     <SafeAreaView
@@ -79,25 +198,41 @@ export function RegisterScreen() {
           type="default"
           isPassword={true}
           Icon1={LockIcon}
+          showDevider={true}
+        />
+        <InputComponent
+          control={form.control}
+          label="Password confirmation"
+          name="password_confirmation"
+          placeholder="********"
+          type="default"
+          isPassword={true}
+          Icon1={LockIcon}
           showDevider={false}
         />
       </View>
       <TouchableOpacity
+        onPress={form.handleSubmit(register)}
         style={{
           width: '100%',
           backgroundColor: currentColor.secondary,
           borderRadius: wp(3),
           padding: wp(3),
-        }}>
-        <Text
-          style={{
-            fontSize: wp(3.5),
-            color: currentColor.primary,
-            textAlign: 'center',
-            fontWeight: 'bold',
-          }}>
-          Register
-        </Text>
+        }}
+        disabled={loading}>
+        {loading ? (
+          <ActivityIndicator color={currentColor.primary} size="small" />
+        ) : (
+          <Text
+            style={{
+              fontSize: wp(3.5),
+              color: currentColor.primary,
+              textAlign: 'center',
+              fontWeight: 'bold',
+            }}>
+            Register
+          </Text>
+        )}
       </TouchableOpacity>
 
       <View

@@ -33,33 +33,41 @@ export default function InputComponent<T extends FieldValues>({
 }: InputComponentProps<T>) {
   const {currentColor} = useTheme();
   return (
-    <KeyboardAvoidingView
-      style={{
-        borderBottomColor: currentColor.tertiary,
-        borderBottomWidth: showDevider ? 2 : 0,
-      }}>
-      <Text
-        style={{
-          fontSize: wp(3.5),
-          color: currentColor.secondary,
-        }}>
-        {label}
-      </Text>
-      <View
-        style={{
-          width: '100%',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-        }}>
-        {Icon1 && (
-          <Icon1 color={currentColor.secondary} height={wp(4)} width={wp(4)} />
-        )}
-        <Controller
-          name={name}
-          control={control}
-          render={() => {
-            return (
+    <Controller
+      name={name}
+      control={control}
+      render={({
+        field: {onChange, ref, value, onBlur},
+        fieldState: {error},
+      }) => {
+        return (
+          <KeyboardAvoidingView
+            style={{
+              borderBottomColor: currentColor.tertiary,
+              borderBottomWidth: showDevider ? 2 : 0,
+            }}>
+            <Text
+              style={{
+                fontSize: wp(3.5),
+                color: currentColor.secondary,
+              }}>
+              {label}
+            </Text>
+            <View
+              style={{
+                width: '100%',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
+              }}>
+              {Icon1 && (
+                <Icon1
+                  color={currentColor.secondary}
+                  height={wp(4)}
+                  width={wp(4)}
+                />
+              )}
+
               <TextInput
                 style={{
                   width: wp(75),
@@ -70,11 +78,26 @@ export default function InputComponent<T extends FieldValues>({
                 placeholder={placeholder}
                 placeholderTextColor={currentColor.lightGray}
                 secureTextEntry={isPassword}
+                ref={ref}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
               />
-            );
-          }}
-        />
-      </View>
-    </KeyboardAvoidingView>
+            </View>
+            {error && (
+              <Text
+                style={{
+                  fontSize: wp(3),
+                  fontWeight: '500',
+                  color: 'red',
+                  textAlign: 'left',
+                }}>
+                {error.message}
+              </Text>
+            )}
+          </KeyboardAvoidingView>
+        );
+      }}
+    />
   );
 }
