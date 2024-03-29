@@ -9,7 +9,7 @@ import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
 import InputComponent from '../_components/input-component';
 import {useForm} from 'react-hook-form';
 
-export function LoginScreen() {
+export function RegisterScreen() {
   const navigation = useNavigation<NavigationProp<AuthStackRoutes>>();
   const {currentColor} = useTheme();
 
@@ -43,7 +43,6 @@ export function LoginScreen() {
         }}>
         <Logo fill={currentColor.primary} width={wp(12)} height={wp(12)} />
       </View>
-
       <Text
         style={{
           fontSize: wp(4),
@@ -51,9 +50,8 @@ export function LoginScreen() {
           textAlign: 'center',
           fontWeight: 'bold',
         }}>
-        Login to your account
+        Create a new account
       </Text>
-
       <View
         style={{
           width: '100%',
@@ -98,7 +96,7 @@ export function LoginScreen() {
             textAlign: 'center',
             fontWeight: 'bold',
           }}>
-          Login
+          Register
         </Text>
       </TouchableOpacity>
 
@@ -117,10 +115,10 @@ export function LoginScreen() {
             textAlign: 'center',
             fontWeight: '400',
           }}>
-          You don't have an account ?
+          You already have an account ?
         </Text>
 
-        <TouchableOpacity onPress={() => navigation.navigate('RegisterScreen')}>
+        <TouchableOpacity onPress={() => navigation.navigate('LoginScreen')}>
           <Text
             style={{
               fontSize: wp(3.5),
@@ -128,7 +126,7 @@ export function LoginScreen() {
               textAlign: 'center',
               fontWeight: 'bold',
             }}>
-            Register
+            Login
           </Text>
         </TouchableOpacity>
       </View>
