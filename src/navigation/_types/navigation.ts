@@ -6,4 +6,5 @@ export type AuthStackRoutes = {
   onBoardingScreen: undefined;
   LoginScreen: undefined;
   RegisterScreen: undefined;
+  CompleteProfileScreen: undefined;
 };

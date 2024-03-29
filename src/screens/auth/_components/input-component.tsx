@@ -19,6 +19,9 @@ interface InputComponentProps<T extends FieldValues>
   type: KeyboardTypeOptions;
   Icon1?: React.FC<SvgProps>; // Optional icon component for the left side
   showDevider?: boolean;
+  multiline?: boolean;
+  numOfLines?: number;
+  textAlignVertical?: 'center' | 'auto' | 'top' | 'bottom' | undefined;
 }
 
 export default function InputComponent<T extends FieldValues>({
@@ -30,6 +33,9 @@ export default function InputComponent<T extends FieldValues>({
   type,
   Icon1,
   showDevider = true,
+  multiline = false,
+  numOfLines,
+  textAlignVertical,
 }: InputComponentProps<T>) {
   const {currentColor} = useTheme();
   return (
@@ -82,6 +88,9 @@ export default function InputComponent<T extends FieldValues>({
                 onBlur={onBlur}
                 onChangeText={onChange}
                 value={value}
+                multiline={multiline}
+                numberOfLines={numOfLines}
+                textAlignVertical={textAlignVertical}
               />
             </View>
             {error && (

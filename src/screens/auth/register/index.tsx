@@ -14,6 +14,7 @@ import Snackbar from 'react-native-snackbar';
 import {FirebaseError} from '../../../types';
 import {yupResolver} from '@hookform/resolvers/yup';
 import registrationSchema from './_validation/register-schema';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type registerProps = {
   email: string;
@@ -59,23 +60,12 @@ export function RegisterScreen() {
               is_premium: false,
               location: null,
             })
-            .then(res => {
-              console.log('registered : ', res);
-              // setData({
-              //   token: res.user.uid,
-              //   user: {
-              //     email: data.email,
-              //     first_name: null,
-              //     last_name: null,
-              //     followers: [],
-              //     following: [],
-              //     username: null,
-              //   },
-              // });
+            .then(async () => {
+              await AsyncStorage.setItem('threads-user-id', res.user.uid);
               setLoading(false);
               Snackbar.show({
                 text: 'Account has been created successfully',
-                duration: Snackbar.LENGTH_INDEFINITE,
+                duration: Snackbar.LENGTH_SHORT,
                 action: {
                   text: 'UNDO',
                   textColor: '#fff',
@@ -85,9 +75,7 @@ export function RegisterScreen() {
                 },
                 backgroundColor: currentColor.violet,
               });
-              // navigation.navigate('CompleteProfile', {
-              //   email: data.email,
-              // });
+              navigation.navigate('CompleteProfileScreen');
             })
             .catch((error: FirebaseError) => {
               console.log('error creating in users table : ', error);
