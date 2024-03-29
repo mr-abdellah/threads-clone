@@ -1,13 +1,18 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import AppStack from './app-stack';
 import AuthStack from './auth-stack';
 import {NavigationContainer} from '@react-navigation/native';
+import {useAuth} from '../context/auth-context';
 
 export default function AppNav() {
-  const token = '';
+  const {userId, getUserData} = useAuth();
+
+  useEffect(() => {
+    getUserData();
+  }, []);
   return (
     <NavigationContainer>
-      {token?.length > 0 ? <AppStack /> : <AuthStack />}
+      {userId ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }

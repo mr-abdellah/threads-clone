@@ -1,6 +1,6 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {AuthStackRoutes} from './_types/navigation';
+import {AppStackRoutes, AuthStackRoutes} from './_types/navigation';
 import {
   CompleteProfileScreen,
   LoginScreen,
@@ -10,10 +10,12 @@ import {
 import {Text, TouchableOpacity} from 'react-native';
 import {useTheme} from '../hooks';
 import {widthPercentageToDP} from 'react-native-responsive-screen';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 
 const Stack = createNativeStackNavigator<AuthStackRoutes>();
 export default function AuthStack() {
   const {currentColor} = useTheme();
+  const navigation = useNavigation<NavigationProp<AppStackRoutes>>();
   return (
     <Stack.Navigator initialRouteName="CompleteProfileScreen">
       <Stack.Screen
@@ -48,7 +50,8 @@ export default function AuthStack() {
           },
           headerRight: () => {
             return (
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('HomeScreen')}>
                 <Text
                   style={{
                     color: currentColor.secondary,
