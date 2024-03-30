@@ -28,7 +28,7 @@ export function RegisterScreen() {
 
   const form = useForm<registerProps>({
     defaultValues: {
-      email: 'belkaid.abdulah@gmail.com',
+      email: 'alsu@gmail.com',
       password: '12345678',
       password_confirmation: '12345678',
     },
@@ -148,7 +148,7 @@ export function RegisterScreen() {
           padding: wp(2),
           borderRadius: wp(2),
         }}>
-        <Logo fill={currentColor.primary} width={wp(12)} height={wp(12)} />
+        <Logo color={currentColor.primary} width={wp(12)} height={wp(12)} />
       </View>
       <Text
         style={{

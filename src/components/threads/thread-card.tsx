@@ -11,8 +11,9 @@ import {
   SendIcon,
 } from '../../../assets/icons';
 import {useTheme} from '../../hooks';
+import {Thread} from '../../screens/app/home/_components/threads-list';
 
-export function ThreadCard() {
+export function ThreadCard(data: Thread) {
   const {currentColor} = useTheme();
   return (
     <View
@@ -74,8 +75,7 @@ export function ThreadCard() {
             fontSize: wp(3.2),
             color: currentColor.secondary,
           }}>
-          Let's talk about the incredible power of perseverance and how it can
-          change your life. 🚀
+          {data.description}
         </Text>
         <View
           style={{

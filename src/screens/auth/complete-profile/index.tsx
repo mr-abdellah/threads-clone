@@ -7,8 +7,6 @@ import {
 } from 'react-native';
 import React from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {NavigationProp, useNavigation} from '@react-navigation/native';
-import {AppStackRoutes} from '../../../navigation/_types/navigation';
 import {useTheme} from '../../../hooks';
 import {
   widthPercentageToDP as wp,
@@ -39,7 +37,6 @@ export type completeProfileProps = {
 };
 
 export function CompleteProfileScreen() {
-  const navigation = useNavigation<NavigationProp<AppStackRoutes>>();
   const {currentColor} = useTheme();
   const {authenticateUser} = useAuth();
 

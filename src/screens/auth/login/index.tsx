@@ -10,6 +10,7 @@ import InputComponent from '../_components/input-component';
 import {useForm} from 'react-hook-form';
 import auth from '@react-native-firebase/auth';
 import {useAuth} from '../../../context/auth-context';
+import Snackbar from 'react-native-snackbar';
 
 type loginProps = {
   email: string;
@@ -23,26 +24,38 @@ export function LoginScreen() {
 
   const form = useForm<loginProps>({
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'belkaid.abdulah@gmail.com',
+      password: '12345678',
     },
   });
 
   const [loading, setLoading] = React.useState<boolean>(false);
 
   const login = async (data: loginProps) => {
-    try {
-      setLoading(true);
-      await auth()
-        .signInWithEmailAndPassword(data.email, data.password)
-        .then(res => {
-          authenticateUser(res.user.uid);
-          getUserCollection();
-          setLoading(false);
+    setLoading(true);
+    await auth()
+      .signInWithEmailAndPassword(data.email, data.password)
+      .then(res => {
+        authenticateUser(res.user.uid);
+        getUserCollection();
+        setLoading(false);
+      })
+      .catch(error => {
+        console.log('error while login in', error);
+        setLoading(false);
+        Snackbar.show({
+          text: error?.userInfo?.message,
+          duration: Snackbar.LENGTH_INDEFINITE,
+          action: {
+            text: 'UNDO',
+            textColor: '#fff',
+            onPress: () => {
+              //
+            },
+          },
+          backgroundColor: 'red',
         });
-    } catch (error) {
-      console.log('error while login in', error);
-    }
+      });
   };
 
   return (
@@ -66,7 +79,7 @@ export function LoginScreen() {
           padding: wp(2),
           borderRadius: wp(2),
         }}>
-        <Logo fill={currentColor.primary} width={wp(12)} height={wp(12)} />
+        <Logo color={currentColor.primary} width={wp(12)} height={wp(12)} />
       </View>
 
       <Text

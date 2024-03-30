@@ -4,7 +4,10 @@ import {NavigationProp, useNavigation} from '@react-navigation/native';
 import {AuthStackRoutes} from '../../../navigation/_types/navigation';
 import {useTheme} from '../../../hooks';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from 'react-native-responsive-screen';
 import {InstagramIcon} from '../../../../assets/icons';
 
 export function OnboardingScreen() {
@@ -16,7 +19,7 @@ export function OnboardingScreen() {
         flex: 1,
         backgroundColor: currentColor.primary,
         flexDirection: 'column',
-        justifyContent: 'flex-start',
+        justifyContent: 'space-evenly',
         alignItems: 'center',
       }}>
       {/* <OnboardingPattern /> */}
@@ -24,6 +27,7 @@ export function OnboardingScreen() {
         source={require('../../../../assets/patterns/onboarding.png')}
         style={{
           width: wp(100),
+          height: hp(70),
         }}
         resizeMethod="resize"
         resizeMode="cover"

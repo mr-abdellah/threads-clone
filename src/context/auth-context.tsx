@@ -1,5 +1,4 @@
 import {createContext, ReactNode, useContext, useState} from 'react';
-import Storage from 'react-native-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useUser} from '../features/userSlice';
 import firestore from '@react-native-firebase/firestore';
@@ -7,20 +6,13 @@ import auth from '@react-native-firebase/auth';
 import {User} from '../types/user';
 
 export interface AuthContextProps {
-  authenticateUser: (token: string) => void;
+  authenticateUser: (token: string) => Promise<void>;
   isAuthenticated: boolean;
   checking: boolean;
-  getUserCollection: () => void;
-  logout: () => void;
+  getUserCollection: () => Promise<void>;
+  logout: () => Promise<void>;
+  userID: string | null;
 }
-
-const storage = new Storage({
-  size: 1000,
-  storageBackend: AsyncStorage,
-  defaultExpires: 1000 * 3600 * 24,
-  enableCache: true,
-  sync: {},
-});
 
 export const AuthContext = createContext<AuthContextProps | null>(null);
 
@@ -34,31 +26,20 @@ export const AuthProvider = ({
   const [checking, setChecking] = useState<boolean>(false);
   const {setData} = useUser();
 
-  const authenticateUser = (token: string) => {
-    storage
-      .save({
-        key: 'threads-user-id',
-        data: {
-          token: token,
-        },
-        expires: 1000 * 3600,
-      })
-      .then(() => {
-        setIsAuthenticated(true);
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-      });
+  const authenticateUser = async (token: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem('threads-user-id', token);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error while authenticating user:', error);
+      setIsAuthenticated(false);
+    }
   };
 
-  const isLoggedIn = async () => {
-    const {token} = await storage.load({
-      key: 'threads-user-id',
-      autoSync: true,
-    });
+  const isLoggedIn = async (): Promise<boolean> => {
+    const token = await AsyncStorage.getItem('threads-user-id');
     if (token) {
       setUserID(token);
-      await getUserCollection();
       return true;
     } else {
       setIsAuthenticated(false);
@@ -66,29 +47,24 @@ export const AuthProvider = ({
     }
   };
 
-  const getUserCollection = async () => {
+  const getUserCollection = async (): Promise<void> => {
     try {
       setChecking(true);
-
       const isLoggedInUser = await isLoggedIn();
-
-      if (isLoggedInUser && userID !== null) {
+      if (isLoggedInUser) {
         const userSnapshot = await firestore()
           .collection('users')
           .where('id', '==', userID)
           .get();
 
         if (!userSnapshot.empty) {
-          const res = userSnapshot.docs[0].data();
-          const user = res as User;
-          console.log('User data:', user);
-
+          const user = userSnapshot.docs[0].data() as User;
           setData(user);
+          setIsAuthenticated(true);
         } else {
           console.log('No user found with the given ID.');
         }
       }
-
       setChecking(false);
     } catch (error) {
       setChecking(false);
@@ -96,22 +72,14 @@ export const AuthProvider = ({
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
-      await storage
-        .remove({
-          key: 'threads-user-id',
-        })
-        .then(async () => {
-          await auth()
-            .signOut()
-            .then(() => {
-              setUserID(null);
-              setIsAuthenticated(false);
-            });
-        });
+      await AsyncStorage.removeItem('threads-user-id');
+      await auth().signOut();
+      setUserID(null);
+      setIsAuthenticated(false);
     } catch (error: any) {
-      console.log('error while logout', error);
+      console.error('Error while logging out:', error);
       if (error?.code === 'auth/no-current-user') {
         setUserID(null);
         setIsAuthenticated(false);
@@ -127,6 +95,7 @@ export const AuthProvider = ({
         getUserCollection,
         logout,
         checking,
+        userID,
       }}>
       {children}
     </AuthContext.Provider>

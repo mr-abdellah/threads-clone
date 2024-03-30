@@ -12,6 +12,7 @@ import AtIcon from './at.svg';
 import MessageIcon from './message.svg';
 import RepostIcon from './repost.svg';
 import SendIcon from './send.svg';
+import ArrowIcon from './arrow.svg';
 
 export {
   InstagramIcon,
@@ -28,4 +29,5 @@ export {
   MessageIcon,
   RepostIcon,
   SendIcon,
+  ArrowIcon,
 };
